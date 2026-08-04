@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>45 MINUTES · STATS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- LOGIN OVERLAY -->
+  <div id="login" class="login-overlay">
+    <div class="login-card">
+      <div class="brand-block">
+        <div class="brand-lg">45 MINUTES</div>
+        <div class="brand-sub">STATS · DASHBOARD</div>
+      </div>
+      <input
+        type="password"
+        id="password-input"
+        placeholder="CONTRASEÑA"
+        autocomplete="current-password"
+      />
+      <button id="login-btn" class="btn-primary">ENTRAR</button>
+      <div id="login-error" class="error-msg hidden"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="brand-md">45 MINUTES</div>
+        <div class="brand-tag">STATS</div>
+      </div>
+      <div class="topbar-right">
+        <div class="last-update" id="last-update">
+          <span class="dot"></span>
+          <span>Actualizado hace <span id="ago">—</span></span>
+        </div>
+        <button id="refresh-btn" class="btn-mini">↻ REFRESCAR</button>
+        <button id="logout-btn" class="btn-mini">SALIR</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- CAJA DEL DÍA -->
+      <section class="card card-caja">
+        <div class="card-header">
+          <span class="emoji">💵</span>
+          <h2>CAJA DEL DÍA</h2>
+        </div>
+        <div class="caja-total">
+          <div class="label">TOTAL EN CAJA</div>
+          <div class="value" id="caja-total">$0</div>
+        </div>
+        <div class="caja-grid">
+          <div class="pill pill-yellow">
+            <div class="pill-label">EFECTIVO</div>
+            <div class="pill-value" id="caja-efectivo">$0</div>
+          </div>
+          <div class="pill pill-blue">
+            <div class="pill-label">TARJETA</div>
+            <div class="pill-value" id="caja-tarjeta">$0</div>
+          </div>
+          <div class="pill pill-purple">
+            <div class="pill-label">TRANSFERENCIA</div>
+            <div class="pill-value" id="caja-transfer">$0</div>
+          </div>
+          <div class="pill pill-green">
+            <div class="pill-label">DÓLARES</div>
+            <div class="pill-value" id="caja-usd">$0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VENTAS DEL DÍA -->
+      <section class="card">
+        <div class="card-header">
+          <span class="emoji">🧾</span>
+          <h2>VENTAS DEL DÍA</h2>
+        </div>
+        <div class="big-stat">
+          <div class="big-value" id="ventas-count">0</div>
+          <div class="big-label">TICKETS</div>
+        </div>
+        <div class="small-stat">
+          <span>MONTO TOTAL</span>
+          <strong id="ventas-monto">$0</strong>
+        </div>
+        <div class="small-stat">
+          <span>GASTOS</span>
+          <strong id="ventas-gastos" class="warn">$0</strong>
+        </div>
+      </section>
+
+      <!-- INGRESOS -->
+      <section class="card">
+        <div class="card-header">
+          <span class="emoji">🚪</span>
+          <h2>INGRESOS HOY</h2>
+        </div>
+        <div class="big-stat">
+          <div class="big-value" id="access-unicos">0</div>
+          <div class="big-label">SOCIOS ÚNICOS</div>
+        </div>
+        <div class="small-stat">
+          <span>ACCESOS TOTALES</span>
+          <strong id="access-total">0</strong>
+        </div>
+        <div class="small-stat">
+          <span>DENEGADOS</span>
+          <strong id="access-denegados" class="warn">0</strong>
+        </div>
+      </section>
+
+      <!-- SOCIOS -->
+      <section class="card">
+        <div class="card-header">
+          <span class="emoji">👥</span>
+          <h2>SOCIOS</h2>
+        </div>
+        <div class="big-stat">
+          <div class="big-value" id="socios-activos">0</div>
+          <div class="big-label">ACTIVOS</div>
+        </div>
+        <div class="small-stat">
+          <span>VENCEN EN 7 DÍAS</span>
+          <strong id="socios-vencen" class="warn">0</strong>
+        </div>
+        <div class="small-stat">
+          <span>VENCIDOS</span>
+          <strong id="socios-vencidos" class="danger">0</strong>
+        </div>
+      </section>
+
+      <!-- ÚLTIMAS VENTAS -->
+      <section class="card card-wide">
+        <div class="card-header">
+          <span class="emoji">📊</span>
+          <h2>ÚLTIMAS VENTAS</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>HORA</th>
+                <th>CONCEPTO</th>
+                <th>MÉTODO</th>
+                <th>USUARIO</th>
+                <th class="right">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody id="ventas-tbody">
+              <tr><td colspan="5" class="muted center">Sin datos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- STOCK BAJO -->
+      <section class="card card-wide">
+        <div class="card-header">
+          <span class="emoji">📦</span>
+          <h2>STOCK BAJO</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>PRODUCTO</th>
+                <th class="right">STOCK</th>
+                <th class="right">PRECIO</th>
+              </tr>
+            </thead>
+            <tbody id="stock-tbody">
+              <tr><td colspan="3" class="muted center">Sin datos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>45 MINUTES · STATS</span>
+      <span id="snapshot-time">—</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
