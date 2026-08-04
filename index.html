@@ -17,8 +17,11 @@
   <div id="login" class="login-overlay">
     <div class="login-card">
       <div class="brand-block">
-        <div class="brand-lg">45 MINUTES</div>
-        <div class="brand-sub">STATS · DASHBOARD</div>
+        <div class="logo-square">45</div>
+        <div>
+          <div class="brand-lg">45 MINUTES</div>
+          <div class="brand-sub">LIFE FITNESS · STATS</div>
+        </div>
       </div>
       <input
         type="password"
@@ -35,8 +38,9 @@
   <div id="dashboard" class="hidden">
     <header class="topbar">
       <div class="topbar-left">
-        <div class="brand-md">45 MINUTES</div>
-        <div class="brand-tag">STATS</div>
+        <div class="logo-square logo-square-sm">45</div>
+        <div class="brand-md">45 MINUTES LIFE FITNESS</div>
+        <div class="brand-tag"><span class="tag-dot"></span>STATS</div>
       </div>
       <div class="topbar-right">
         <div class="last-update" id="last-update">
@@ -61,20 +65,32 @@
         </div>
         <div class="caja-grid">
           <div class="pill pill-yellow">
-            <div class="pill-label">EFECTIVO</div>
-            <div class="pill-value" id="caja-efectivo">$0</div>
+            <div class="pill-dot">💵</div>
+            <div class="pill-body">
+              <div class="pill-label">EFECTIVO</div>
+              <div class="pill-value" id="caja-efectivo">$0</div>
+            </div>
           </div>
           <div class="pill pill-blue">
-            <div class="pill-label">TARJETA</div>
-            <div class="pill-value" id="caja-tarjeta">$0</div>
+            <div class="pill-dot">💳</div>
+            <div class="pill-body">
+              <div class="pill-label">TARJETA</div>
+              <div class="pill-value" id="caja-tarjeta">$0</div>
+            </div>
           </div>
           <div class="pill pill-purple">
-            <div class="pill-label">TRANSFERENCIA</div>
-            <div class="pill-value" id="caja-transfer">$0</div>
+            <div class="pill-dot">🏦</div>
+            <div class="pill-body">
+              <div class="pill-label">TRANSFER</div>
+              <div class="pill-value" id="caja-transfer">$0</div>
+            </div>
           </div>
           <div class="pill pill-green">
-            <div class="pill-label">DÓLARES</div>
-            <div class="pill-value" id="caja-usd">$0</div>
+            <div class="pill-dot">💲</div>
+            <div class="pill-body">
+              <div class="pill-label">DÓLARES</div>
+              <div class="pill-value" id="caja-usd">$0</div>
+            </div>
           </div>
         </div>
       </section>

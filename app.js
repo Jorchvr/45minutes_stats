@@ -267,6 +267,39 @@ function logout(msg) {
   if (msg) showError(msg);
 }
 
+// ============ DEMO MODE (bypass crypto para preview) ============
+function loadDemo() {
+  const demo = {
+    generated_at: new Date().toISOString(),
+    caja: { efectivo: 3450, tarjeta: 1200, transferencia: 800, dolares: 150, total: 5600 },
+    ventas: {
+      count: 24, monto: 5750, gastos: 150,
+      ultimas: [
+        { fecha: new Date(Date.now() - 5 * 60000).toISOString(), concepto: "MENSUALIDAD GYM", metodo: "Efectivo", usuario: "JORGE", total: 500 },
+        { fecha: new Date(Date.now() - 12 * 60000).toISOString(), concepto: "BOTELLA AGUA + BARRA PROTEINA", metodo: "Tarjeta", usuario: "MIRIAM", total: 85 },
+        { fecha: new Date(Date.now() - 18 * 60000).toISOString(), concepto: "DAYPASS SPINNING", metodo: "Transferencia", usuario: "JORGE", total: 120 },
+        { fecha: new Date(Date.now() - 25 * 60000).toISOString(), concepto: "INSCRIPCION + MENSUALIDAD", metodo: "Efectivo", usuario: "JORGE", total: 1100 },
+        { fecha: new Date(Date.now() - 40 * 60000).toISOString(), concepto: "PROTEINA WHEY 2 KG", metodo: "Tarjeta", usuario: "MIRIAM", total: 890 },
+        { fecha: new Date(Date.now() - 55 * 60000).toISOString(), concepto: "MENSUALIDAD GYM+SPINNING", metodo: "Efectivo", usuario: "JORGE", total: 750 },
+        { fecha: new Date(Date.now() - 68 * 60000).toISOString(), concepto: "[GASTO] GARRAFON AGUA", metodo: "Efectivo", usuario: "JORGE", total: -150 },
+        { fecha: new Date(Date.now() - 90 * 60000).toISOString(), concepto: "DAYPASS", metodo: "Efectivo", usuario: "MIRIAM", total: 100 },
+      ],
+    },
+    accesos: { unicos: 47, total: 62, denegados: 3 },
+    socios: { activos: 214, vencen_7d: 8, vencidos: 15 },
+    stock_bajo: [
+      { nombre: "PROTEINA WHEY VAINILLA 2KG", stock: 0, precio: 890 },
+      { nombre: "BARRA PROTEINA CHOCOLATE", stock: 1, precio: 45 },
+      { nombre: "BOTELLA AGUA 600ML", stock: 2, precio: 20 },
+      { nombre: "CREATINA 500G", stock: 3, precio: 550 },
+    ],
+  };
+  render(demo);
+  el("login").classList.add("hidden");
+  el("dashboard").classList.remove("hidden");
+  agoTimer = setInterval(updateAgo, 1000);
+}
+
 // ============ INIT ============
 document.addEventListener("DOMContentLoaded", async () => {
   el("login-btn").addEventListener("click", login);
@@ -275,6 +308,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   el("logout-btn").addEventListener("click", () => logout());
   el("refresh-btn").addEventListener("click", tick);
+
+  // ?demo=1 → sin backend, sin password, datos hardcoded (para preview de diseño)
+  if (new URLSearchParams(location.search).has("demo")) {
+    loadDemo();
+    return;
+  }
 
   const savedPw = sessionStorage.getItem("gm_pw");
   if (savedPw) {
