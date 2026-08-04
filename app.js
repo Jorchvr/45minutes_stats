@@ -1,5 +1,5 @@
 // ============================================================
-// 45 MINUTES · STATS DASHBOARD
+// 45 MINUTES · STATS DASHBOARD (v2)
 // Fetches encrypted snapshot from GitHub, decrypts client-side.
 // ============================================================
 
@@ -14,7 +14,6 @@ const CONFIG = {
 };
 
 const el = (id) => document.getElementById(id);
-const $ = (sel) => document.querySelector(sel);
 
 let cryptoKey = null;
 let refreshTimer = null;
@@ -28,8 +27,8 @@ function b64ToBytes(b64) {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
-function strToBytes(s) { return new TextEncoder().encode(s); }
-function bytesToStr(b) { return new TextDecoder().decode(b); }
+const strToBytes = (s) => new TextEncoder().encode(s);
+const bytesToStr = (b) => new TextDecoder().decode(b);
 
 function escapeHTML(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
@@ -39,7 +38,15 @@ function escapeHTML(s) {
 
 function fmtMoney(n) {
   if (n == null || isNaN(n)) return "$0";
-  return "$" + Math.round(Number(n)).toLocaleString("es-MX");
+  const abs = Math.abs(Number(n));
+  const sign = Number(n) < 0 ? "-" : "";
+  return sign + "$" + abs.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function fmtUsd(n) {
+  if (n == null || isNaN(n)) return "US$0";
+  const abs = Math.abs(Number(n));
+  const sign = Number(n) < 0 ? "-" : "";
+  return sign + "US$" + abs.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtNumber(n) {
   if (n == null || isNaN(n)) return "0";
@@ -48,9 +55,7 @@ function fmtNumber(n) {
 function fmtTime(iso) {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleTimeString("es-MX", {
-      hour: "2-digit", minute: "2-digit",
-    });
+    return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
   } catch { return "—"; }
 }
 function fmtAgo(iso) {
@@ -72,35 +77,31 @@ function tagClassForMethod(m) {
   if (s.includes("dol") || s.includes("usd")) return "tag-usd";
   return "";
 }
+function tagClassForTipo(t) {
+  const s = (t || "").toLowerCase();
+  if (s.includes("nuevo")) return "tag-nuevo";
+  if (s.includes("renov")) return "tag-renovacion";
+  if (s.includes("inscr")) return "tag-inscripcion";
+  if (s.includes("pos")) return "tag-pos";
+  if (s.includes("gasto")) return "tag-gasto";
+  return "";
+}
 
 // ============ CRYPTO ============
 async function deriveKey(password) {
   const passKey = await crypto.subtle.importKey(
-    "raw",
-    strToBytes(password),
-    { name: "PBKDF2" },
-    false,
-    ["deriveKey"]
-  );
+    "raw", strToBytes(password), { name: "PBKDF2" }, false, ["deriveKey"]);
   return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: strToBytes(CONFIG.pbkdf2Salt),
-      iterations: CONFIG.pbkdf2Iterations,
-      hash: "SHA-256",
-    },
+    { name: "PBKDF2", salt: strToBytes(CONFIG.pbkdf2Salt),
+      iterations: CONFIG.pbkdf2Iterations, hash: "SHA-256" },
     passKey,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["decrypt"]
-  );
+    { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
 }
 
 async function fetchSnapshot() {
-  const url =
-    `https://raw.githubusercontent.com/${CONFIG.repoOwner}/` +
-    `${CONFIG.repoName}/${CONFIG.dataBranch}/${CONFIG.snapshotFile}` +
-    `?t=${Date.now()}`;
+  const url = `https://raw.githubusercontent.com/${CONFIG.repoOwner}/`
+            + `${CONFIG.repoName}/${CONFIG.dataBranch}/${CONFIG.snapshotFile}`
+            + `?t=${Date.now()}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`HTTP_${res.status}`);
   return res.json();
@@ -115,42 +116,63 @@ async function decryptSnapshot(snap, key) {
 
 // ============ RENDER ============
 function render(data) {
-  const caja = data.caja || {};
-  el("caja-efectivo").textContent = fmtMoney(caja.efectivo);
-  el("caja-tarjeta").textContent = fmtMoney(caja.tarjeta);
-  el("caja-transfer").textContent = fmtMoney(caja.transferencia);
-  el("caja-usd").textContent = fmtMoney(caja.dolares);
-  el("caja-total").textContent = fmtMoney(caja.total);
+  // 1. Caja total (acumulado)
+  const ct = data.caja_total || {};
+  el("cajatotal-pesos").textContent = fmtMoney(ct.pesos);
+  el("cajatotal-usd").textContent = fmtUsd(ct.usd);
 
-  const v = data.ventas || {};
-  el("ventas-count").textContent = fmtNumber(v.count);
-  el("ventas-monto").textContent = fmtMoney(v.monto);
-  el("ventas-gastos").textContent = fmtMoney(v.gastos);
+  // 2. Balance neto del día
+  const bn = data.caja_hoy_neto || {};
+  el("balance-total").textContent = fmtMoney(bn.total_mxn);
+  el("balance-efectivo").textContent = fmtMoney(bn.efectivo);
+  el("balance-transfer").textContent = fmtMoney(bn.transferencia);
+  el("balance-tarjeta").textContent = fmtMoney(bn.tarjeta);
+  el("balance-usd").textContent = fmtUsd(bn.dolares_usd);
 
-  const a = data.accesos || {};
-  el("access-unicos").textContent = fmtNumber(a.unicos);
-  el("access-total").textContent = fmtNumber(a.total);
-  el("access-denegados").textContent = fmtNumber(a.denegados);
+  // 3. Personas hoy
+  const p = data.personas_hoy || {};
+  el("personas-total").textContent = fmtNumber(p.total);
+  el("personas-gym").textContent = fmtNumber(p.gym);
+  el("personas-spinning").textContent = fmtNumber(p.spinning);
+  el("personas-pilates").textContent = fmtNumber(p.pilates);
 
+  // 4. Socios
   const s = data.socios || {};
   el("socios-activos").textContent = fmtNumber(s.activos);
   el("socios-vencen").textContent = fmtNumber(s.vencen_7d);
   el("socios-vencidos").textContent = fmtNumber(s.vencidos);
 
+  // 5. Timeline
+  renderTimeline(data.timeline || []);
+
+  // 6. Últimas ventas
+  const v = data.ventas || {};
+  const parts = [];
+  if (v.count) parts.push(`${v.count} tickets`);
+  if (v.count_nuevos) parts.push(`${v.count_nuevos} nuevos`);
+  if (v.count_renovacion) parts.push(`${v.count_renovacion} renov.`);
+  if (v.count_inscripcion) parts.push(`${v.count_inscripcion} insc.`);
+  el("ventas-summary").textContent = parts.length ? parts.join(" · ") : "sin ventas hoy";
+
   const tbody = el("ventas-tbody");
   if (v.ultimas && v.ultimas.length) {
-    tbody.innerHTML = v.ultimas.map((row) => `
-      <tr>
+    tbody.innerHTML = v.ultimas.map((row) => {
+      const refClass = row.refundada ? "refundada" : "";
+      return `
+      <tr class="${refClass}">
         <td>${escapeHTML(fmtTime(row.fecha))}</td>
-        <td>${escapeHTML(row.concepto || "")}</td>
-        <td><span class="tag ${tagClassForMethod(row.metodo)}">${escapeHTML((row.metodo || "").toUpperCase())}</span></td>
         <td>${escapeHTML(row.usuario || "")}</td>
+        <td>${escapeHTML(row.concepto || "")}</td>
+        <td><span class="tag ${tagClassForTipo(row.tipo)}">${escapeHTML((row.tipo || "").toUpperCase())}</span></td>
+        <td><span class="tag ${tagClassForMethod(row.metodo)}">${escapeHTML((row.metodo || "").toUpperCase())}</span></td>
         <td class="right"><strong>${fmtMoney(row.total)}</strong></td>
-      </tr>`).join("");
+      </tr>`;
+    }).join("");
   } else {
-    tbody.innerHTML = `<tr><td colspan="5" class="muted center">Sin ventas hoy</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="muted center">Sin ventas hoy</td></tr>`;
   }
 
+  // 7. Stock bajo
   const stock = data.stock_bajo || [];
   const stbody = el("stock-tbody");
   if (stock.length) {
@@ -172,6 +194,41 @@ function render(data) {
   updateAgo();
 }
 
+function renderTimeline(cortes) {
+  const tl = el("timeline");
+  if (!cortes || !cortes.length) {
+    tl.innerHTML = `<div class="timeline-empty">Sin actividad hoy todavía</div>`;
+    return;
+  }
+  tl.innerHTML = cortes.map((c, i) => {
+    const esExtremo = c.etiqueta === "APERTURA" || c.etiqueta === "AHORA" || c.etiqueta === "CIERRE";
+    const totalDelta = (c.delta_pesos || 0) + (c.delta_usd || 0);
+    let deltaCls = "zero", deltaTxt = "—";
+    if (i === 0) {
+      deltaTxt = c.saldo_pesos || c.saldo_usd ? "INICIO" : "—";
+    } else if (totalDelta > 0) {
+      deltaCls = "up";
+      const parts = [];
+      if (c.delta_pesos > 0) parts.push(`+${fmtMoney(c.delta_pesos)}`);
+      if (c.delta_usd > 0) parts.push(`+${fmtUsd(c.delta_usd)}`);
+      deltaTxt = parts.join(" · ");
+    } else if (totalDelta < 0) {
+      deltaCls = "down";
+      const parts = [];
+      if (c.delta_pesos < 0) parts.push(fmtMoney(c.delta_pesos));
+      if (c.delta_usd < 0) parts.push(fmtUsd(c.delta_usd));
+      deltaTxt = parts.join(" · ");
+    }
+    return `
+      <div class="timeline-item ${esExtremo ? "extremo" : ""}">
+        <div class="timeline-label">${escapeHTML(c.etiqueta)}</div>
+        <div class="timeline-pesos">${fmtMoney(c.saldo_pesos)}</div>
+        <div class="timeline-usd">${fmtUsd(c.saldo_usd)}</div>
+        <div class="timeline-delta ${deltaCls}">${escapeHTML(deltaTxt)}</div>
+      </div>`;
+  }).join("");
+}
+
 function updateAgo() {
   if (!lastSnapshotAt) return;
   el("ago").textContent = fmtAgo(lastSnapshotAt);
@@ -191,9 +248,7 @@ async function tick() {
     render(data);
   } catch (e) {
     console.error("tick failed:", e);
-    if (e.name === "OperationError") {
-      logout("Contraseña ya no es válida");
-    }
+    if (e.name === "OperationError") logout("Contraseña ya no es válida");
   }
 }
 
@@ -205,23 +260,17 @@ function startPolling() {
 }
 
 // ============ LOGIN / LOGOUT ============
-function showError(msg) {
-  const e = el("login-error");
-  e.textContent = msg;
-  e.classList.remove("hidden");
-}
-function hideError() { el("login-error").classList.add("hidden"); }
+const showError = (msg) => { const e = el("login-error"); e.textContent = msg; e.classList.remove("hidden"); };
+const hideError = () => el("login-error").classList.add("hidden");
 
 async function login() {
   hideError();
   const pw = el("password-input").value;
   if (!pw) return showError("INGRESA LA CONTRASEÑA");
-
   const btn = el("login-btn");
   btn.disabled = true;
-  const originalText = btn.textContent;
+  const original = btn.textContent;
   btn.textContent = "VERIFICANDO...";
-
   try {
     cryptoKey = await deriveKey(pw);
     const snap = await fetchSnapshot();
@@ -234,31 +283,18 @@ async function login() {
   } catch (e) {
     console.error("login failed:", e);
     cryptoKey = null;
-    if (e.name === "OperationError") {
-      showError("CONTRASEÑA INCORRECTA");
-    } else if (e.message && e.message.startsWith("HTTP_")) {
+    if (e.name === "OperationError") showError("CONTRASEÑA INCORRECTA");
+    else if (e.message && e.message.startsWith("HTTP_")) {
       const code = e.message.slice(5);
-      if (code === "404") {
-        showError("NO HAY SNAPSHOT AÚN (¿EL RUNNER ESTÁ CORRIENDO?)");
-      } else {
-        showError("ERROR DE RED (HTTP " + code + ")");
-      }
-    } else {
-      showError("ERROR: " + (e.message || e));
-    }
-  } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
-  }
+      showError(code === "404" ? "NO HAY SNAPSHOT AÚN (¿RUNNER CORRIENDO?)" : "ERROR DE RED (HTTP " + code + ")");
+    } else showError("ERROR: " + (e.message || e));
+  } finally { btn.disabled = false; btn.textContent = original; }
 }
 
 function logout(msg) {
-  clearInterval(refreshTimer);
-  clearInterval(agoTimer);
-  refreshTimer = null;
-  agoTimer = null;
-  cryptoKey = null;
-  lastSnapshotAt = null;
+  clearInterval(refreshTimer); clearInterval(agoTimer);
+  refreshTimer = null; agoTimer = null;
+  cryptoKey = null; lastSnapshotAt = null;
   sessionStorage.removeItem("gm_pw");
   el("password-input").value = "";
   el("dashboard").classList.add("hidden");
@@ -267,31 +303,39 @@ function logout(msg) {
   if (msg) showError(msg);
 }
 
-// ============ DEMO MODE (bypass crypto para preview) ============
+// ============ DEMO MODE ============
 function loadDemo() {
   const demo = {
     generated_at: new Date().toISOString(),
-    caja: { efectivo: 3450, tarjeta: 1200, transferencia: 800, dolares: 150, total: 5600 },
+    tipo_cambio_usd: 17.0,
+    caja_total: { pesos: 1265, usd: 26.82 },
+    caja_hoy_neto: { total_mxn: 8400, efectivo: 235, transferencia: 0, tarjeta: 8165, dolares_usd: 5.53 },
+    personas_hoy: { total: 83, gym: 78, spinning: 3, pilates: 2 },
+    accesos: { total: 105, denegados: 4 },
+    socios: { activos: 214, vencen_7d: 8, vencidos: 15 },
+    timeline: [
+      { etiqueta: "APERTURA", saldo_pesos: 1030, saldo_usd: 21.29, delta_pesos: 1030, delta_usd: 21.29 },
+      { etiqueta: "10:00", saldo_pesos: 1065, saldo_usd: 23.05, delta_pesos: 35, delta_usd: 1.76 },
+      { etiqueta: "12:00", saldo_pesos: 1265, saldo_usd: 26.82, delta_pesos: 200, delta_usd: 3.76 },
+      { etiqueta: "AHORA", saldo_pesos: 1265, saldo_usd: 26.82, delta_pesos: 0, delta_usd: 0 },
+    ],
     ventas: {
-      count: 24, monto: 5750, gastos: 150,
+      count: 6, monto: 3800, gastos: 0, count_nuevos: 1, count_renovacion: 4, count_inscripcion: 1, count_pos: 0,
       ultimas: [
-        { fecha: new Date(Date.now() - 5 * 60000).toISOString(), concepto: "MENSUALIDAD GYM", metodo: "Efectivo", usuario: "JORGE", total: 500 },
-        { fecha: new Date(Date.now() - 12 * 60000).toISOString(), concepto: "BOTELLA AGUA + BARRA PROTEINA", metodo: "Tarjeta", usuario: "MIRIAM", total: 85 },
-        { fecha: new Date(Date.now() - 18 * 60000).toISOString(), concepto: "DAYPASS SPINNING", metodo: "Transferencia", usuario: "JORGE", total: 120 },
-        { fecha: new Date(Date.now() - 25 * 60000).toISOString(), concepto: "INSCRIPCION + MENSUALIDAD", metodo: "Efectivo", usuario: "JORGE", total: 1100 },
-        { fecha: new Date(Date.now() - 40 * 60000).toISOString(), concepto: "PROTEINA WHEY 2 KG", metodo: "Tarjeta", usuario: "MIRIAM", total: 890 },
-        { fecha: new Date(Date.now() - 55 * 60000).toISOString(), concepto: "MENSUALIDAD GYM+SPINNING", metodo: "Efectivo", usuario: "JORGE", total: 750 },
-        { fecha: new Date(Date.now() - 68 * 60000).toISOString(), concepto: "[GASTO] GARRAFON AGUA", metodo: "Efectivo", usuario: "JORGE", total: -150 },
-        { fecha: new Date(Date.now() - 90 * 60000).toISOString(), concepto: "DAYPASS", metodo: "Efectivo", usuario: "MIRIAM", total: 100 },
+        { fecha: new Date(Date.now() - 20 * 60000).toISOString(), concepto: "MENSUALIDAD GYM - JORGE ANTONIO CEBALLOS MAGNON", metodo: "Tarjeta", usuario: "ABBY", total: 1400, tipo: "Renovación", refundada: false },
+        { fecha: new Date(Date.now() - 79 * 60000).toISOString(), concepto: "DAYPASS - ALANIS", metodo: "Efectivo", usuario: "ABBY", total: 200, tipo: "Renovación", refundada: false },
+        { fecha: new Date(Date.now() - 131 * 60000).toISOString(), concepto: "DAYPASS - PAOLA GOMEZ HARO", metodo: "Tarjeta", usuario: "ABBY", total: 200, tipo: "Renovación", refundada: false },
+        { fecha: new Date(Date.now() - 160 * 60000).toISOString(), concepto: "MENSUALIDAD GYM - SANTIAGO NUÑO CHONG", metodo: "Tarjeta", usuario: "ABBY", total: 1400, tipo: "Renovación", refundada: false },
+        { fecha: new Date(Date.now() - 204 * 60000).toISOString(), concepto: "1 CLASE PILATES - CLIENTE NUEVO", metodo: "Tarjeta", usuario: "ABBY", total: 300, tipo: "Nuevo", refundada: false },
+        { fecha: new Date(Date.now() - 204 * 60000).toISOString(), concepto: "INSCRIPCIÓN - CLIENTE NUEVO", metodo: "Tarjeta", usuario: "ABBY", total: 300, tipo: "Inscripción", refundada: false },
       ],
     },
-    accesos: { unicos: 47, total: 62, denegados: 3 },
-    socios: { activos: 214, vencen_7d: 8, vencidos: 15 },
     stock_bajo: [
-      { nombre: "PROTEINA WHEY VAINILLA 2KG", stock: 0, precio: 890 },
-      { nombre: "BARRA PROTEINA CHOCOLATE", stock: 1, precio: 45 },
-      { nombre: "BOTELLA AGUA 600ML", stock: 2, precio: 20 },
-      { nombre: "CREATINA 500G", stock: 3, precio: 550 },
+      { nombre: "AGUA GRANDE", stock: 0, precio: 35 },
+      { nombre: "GATORADE AZUL", stock: 1, precio: 35 },
+      { nombre: "RYSE ORANGE CREAM", stock: 1, precio: 75 },
+      { nombre: "C4 FROZEN BOMBSICLE", stock: 0, precio: 80 },
+      { nombre: "GATORADE NARANJA", stock: 4, precio: 35 },
     ],
   };
   render(demo);
@@ -303,23 +347,13 @@ function loadDemo() {
 // ============ INIT ============
 document.addEventListener("DOMContentLoaded", async () => {
   el("login-btn").addEventListener("click", login);
-  el("password-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") login();
-  });
+  el("password-input").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
   el("logout-btn").addEventListener("click", () => logout());
   el("refresh-btn").addEventListener("click", tick);
 
-  // ?demo=1 → sin backend, sin password, datos hardcoded (para preview de diseño)
-  if (new URLSearchParams(location.search).has("demo")) {
-    loadDemo();
-    return;
-  }
+  if (new URLSearchParams(location.search).has("demo")) { loadDemo(); return; }
 
   const savedPw = sessionStorage.getItem("gm_pw");
-  if (savedPw) {
-    el("password-input").value = savedPw;
-    await login();
-  } else {
-    el("password-input").focus();
-  }
+  if (savedPw) { el("password-input").value = savedPw; await login(); }
+  else el("password-input").focus();
 });

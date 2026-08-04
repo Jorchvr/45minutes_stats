@@ -53,89 +53,91 @@
     </header>
 
     <main class="grid">
-      <!-- CAJA DEL DÍA -->
-      <section class="card card-caja">
+      <!-- 1. CAJA TOTAL AHORA (acumulado histórico) -->
+      <section class="card">
         <div class="card-header">
-          <span class="emoji">💵</span>
-          <h2>CAJA DEL DÍA</h2>
+          <span class="emoji">💰</span>
+          <h2>CAJA TOTAL (AHORA)</h2>
         </div>
-        <div class="caja-total">
-          <div class="label">TOTAL EN CAJA</div>
-          <div class="value" id="caja-total">$0</div>
-        </div>
-        <div class="caja-grid">
-          <div class="pill pill-yellow">
+        <div class="subtitle">ACUMULADO HISTÓRICO · NUNCA SE REINICIA</div>
+        <div class="caja-dual">
+          <div class="caja-dual-item pill-yellow">
             <div class="pill-dot">💵</div>
             <div class="pill-body">
-              <div class="pill-label">EFECTIVO</div>
-              <div class="pill-value" id="caja-efectivo">$0</div>
+              <div class="pill-label">PESOS MXN</div>
+              <div class="pill-value big" id="cajatotal-pesos">$0</div>
             </div>
           </div>
-          <div class="pill pill-blue">
-            <div class="pill-dot">💳</div>
-            <div class="pill-body">
-              <div class="pill-label">TARJETA</div>
-              <div class="pill-value" id="caja-tarjeta">$0</div>
-            </div>
-          </div>
-          <div class="pill pill-purple">
-            <div class="pill-dot">🏦</div>
-            <div class="pill-body">
-              <div class="pill-label">TRANSFER</div>
-              <div class="pill-value" id="caja-transfer">$0</div>
-            </div>
-          </div>
-          <div class="pill pill-green">
+          <div class="caja-dual-item pill-green">
             <div class="pill-dot">💲</div>
             <div class="pill-body">
               <div class="pill-label">DÓLARES</div>
-              <div class="pill-value" id="caja-usd">$0</div>
+              <div class="pill-value big" id="cajatotal-usd">US$0</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- VENTAS DEL DÍA -->
+      <!-- 2. BALANCE NETO DEL DÍA -->
       <section class="card">
         <div class="card-header">
           <span class="emoji">🧾</span>
-          <h2>VENTAS DEL DÍA</h2>
+          <h2>BALANCE NETO HOY</h2>
         </div>
         <div class="big-stat">
-          <div class="big-value" id="ventas-count">0</div>
-          <div class="big-label">TICKETS</div>
+          <div class="big-value" id="balance-total">$0</div>
+          <div class="big-label">MXN DEL DÍA (SIN DÓLARES)</div>
         </div>
-        <div class="small-stat">
-          <span>MONTO TOTAL</span>
-          <strong id="ventas-monto">$0</strong>
-        </div>
-        <div class="small-stat">
-          <span>GASTOS</span>
-          <strong id="ventas-gastos" class="warn">$0</strong>
+        <div class="mini-grid">
+          <div class="mini-pill pill-yellow">
+            <div class="mini-label">EFECTIVO</div>
+            <div class="mini-value" id="balance-efectivo">$0</div>
+          </div>
+          <div class="mini-pill pill-purple">
+            <div class="mini-label">TRANSF</div>
+            <div class="mini-value" id="balance-transfer">$0</div>
+          </div>
+          <div class="mini-pill pill-blue">
+            <div class="mini-label">TARJETA</div>
+            <div class="mini-value" id="balance-tarjeta">$0</div>
+          </div>
+          <div class="mini-pill pill-green">
+            <div class="mini-label">USD</div>
+            <div class="mini-value" id="balance-usd">US$0</div>
+          </div>
         </div>
       </section>
 
-      <!-- INGRESOS -->
+      <!-- 3. PERSONAS HOY -->
       <section class="card">
         <div class="card-header">
           <span class="emoji">🚪</span>
-          <h2>INGRESOS HOY</h2>
+          <h2>PERSONAS HOY</h2>
         </div>
         <div class="big-stat">
-          <div class="big-value" id="access-unicos">0</div>
-          <div class="big-label">SOCIOS ÚNICOS</div>
+          <div class="big-value" id="personas-total">0</div>
+          <div class="big-label">EN VIVO · DEDUPLICADO POR SOCIO</div>
         </div>
-        <div class="small-stat">
-          <span>ACCESOS TOTALES</span>
-          <strong id="access-total">0</strong>
-        </div>
-        <div class="small-stat">
-          <span>DENEGADOS</span>
-          <strong id="access-denegados" class="warn">0</strong>
+        <div class="modalidad-grid">
+          <div class="mod-pill mod-gym">
+            <div class="mod-icon">🏋️</div>
+            <div class="mod-count" id="personas-gym">0</div>
+            <div class="mod-label">GYM</div>
+          </div>
+          <div class="mod-pill mod-spinning">
+            <div class="mod-icon">🚴</div>
+            <div class="mod-count" id="personas-spinning">0</div>
+            <div class="mod-label">SPINNING</div>
+          </div>
+          <div class="mod-pill mod-pilates">
+            <div class="mod-icon">🧘</div>
+            <div class="mod-count" id="personas-pilates">0</div>
+            <div class="mod-label">PILATES</div>
+          </div>
         </div>
       </section>
 
-      <!-- SOCIOS -->
+      <!-- 4. SOCIOS -->
       <section class="card">
         <div class="card-header">
           <span class="emoji">👥</span>
@@ -143,47 +145,61 @@
         </div>
         <div class="big-stat">
           <div class="big-value" id="socios-activos">0</div>
-          <div class="big-label">ACTIVOS</div>
+          <div class="big-label">CON MEMBRESÍA VIGENTE</div>
         </div>
         <div class="small-stat">
           <span>VENCEN EN 7 DÍAS</span>
           <strong id="socios-vencen" class="warn">0</strong>
         </div>
         <div class="small-stat">
-          <span>VENCIDOS</span>
+          <span>YA VENCIDOS</span>
           <strong id="socios-vencidos" class="danger">0</strong>
         </div>
       </section>
 
-      <!-- ÚLTIMAS VENTAS -->
+      <!-- 5. TIMELINE del saldo del día -->
+      <section class="card card-wide">
+        <div class="card-header">
+          <span class="emoji">📈</span>
+          <h2>SALDO DE CAJA A LO LARGO DEL DÍA</h2>
+        </div>
+        <div class="subtitle">SALDO ACUMULADO AL INICIO DE CADA HORA · CIERRE = AHORA</div>
+        <div class="timeline" id="timeline">
+          <div class="timeline-empty">Sin actividad hoy todavía</div>
+        </div>
+      </section>
+
+      <!-- 6. ÚLTIMAS VENTAS -->
       <section class="card card-wide">
         <div class="card-header">
           <span class="emoji">📊</span>
           <h2>ÚLTIMAS VENTAS</h2>
+          <span class="header-count" id="ventas-summary">0 tickets</span>
         </div>
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
                 <th>HORA</th>
-                <th>CONCEPTO</th>
-                <th>MÉTODO</th>
                 <th>USUARIO</th>
+                <th>CONCEPTO</th>
+                <th>TIPO</th>
+                <th>PAGO</th>
                 <th class="right">TOTAL</th>
               </tr>
             </thead>
             <tbody id="ventas-tbody">
-              <tr><td colspan="5" class="muted center">Sin datos</td></tr>
+              <tr><td colspan="6" class="muted center">Sin ventas hoy</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- STOCK BAJO -->
+      <!-- 7. STOCK BAJO -->
       <section class="card card-wide">
         <div class="card-header">
           <span class="emoji">📦</span>
-          <h2>STOCK BAJO</h2>
+          <h2>STOCK BAJO / AGOTADO</h2>
         </div>
         <div class="table-wrap">
           <table class="table">
@@ -195,7 +211,7 @@
               </tr>
             </thead>
             <tbody id="stock-tbody">
-              <tr><td colspan="3" class="muted center">Sin datos</td></tr>
+              <tr><td colspan="3" class="muted center">Todo el stock OK</td></tr>
             </tbody>
           </table>
         </div>
