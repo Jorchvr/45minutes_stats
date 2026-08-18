@@ -357,3 +357,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (savedPw) { el("password-input").value = savedPw; await login(); }
   else el("password-input").focus();
 });
+
+// ============ PWA / Service Worker ============
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => { /* ignora fallo silencioso */ });
+  });
+}

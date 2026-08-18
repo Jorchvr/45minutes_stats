@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#000000"/>
+  <text x="256" y="272" text-anchor="middle" dominant-baseline="middle"
+        font-family="'Space Grotesk','Segoe UI',system-ui,-apple-system,sans-serif"
+        font-weight="800" font-size="180" fill="#f97316" letter-spacing="-8">45</text>
+</svg>
